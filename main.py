@@ -1,12 +1,10 @@
 import pygame
 import os
-cwd = os.getcwd()
+
 pygame.font.init()
 pygame.mixer.init()
 
-print("Current working Directory :", cwd)
-
-WIDTH, HEIGHT = 900, 500
+WIDTH, HEIGHT = 1200, 600
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Pi-Fighters")
 
@@ -16,7 +14,7 @@ BACKGROUND = pygame.transform.scale(pygame.image.load(
 BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 
 BULLET_HIT_SOUND = pygame.mixer.Sound('assets/sounds/spaceship_hit.wav')
-# BULLET_SHOT_SOUND = pygame.mixer.Sound('assets/sounds/laser.wav')
+BULLET_SHOT_SOUND = pygame.mixer.Sound('assets/sounds/laser.wav')
 
 
 HEALTH_FONT = pygame.font.SysFont('comicsans', 40)
@@ -27,7 +25,11 @@ FPS = 60
 VEL = 5
 BULLET_VEL = 7
 MAX_BULLETS = 5
-SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 60, 50
+SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 90, 80
+P1_ROTATE = 0
+P2_ROTATE = 90
+
+ROTATE_SPEED = 20
 
 P1_BULLET_COLOR = (255, 59, 0)
 P2_BULLET_COLOR = (130, 19, 28)
@@ -36,13 +38,13 @@ P1_HIT = pygame.USEREVENT + 1
 P2_HIT = pygame.USEREVENT + 2
 
 PLAYER_1_IMAGE = pygame.image.load(
-    os.path.join('assets', 'images', 'destroyer.png'))
-PLAYER_1_IMAGE = pygame.transform.scale(
-    PLAYER_1_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT))
+    os.path.join('assets', 'images', 'zero.png'))
+PLAYER_1_IMAGE = pygame.transform.rotate(pygame.transform.scale(
+    PLAYER_1_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P1_ROTATE)
 PLAYER_2_IMAGE = pygame.image.load(
-    os.path.join('assets', 'images', 'F5S4.png'))
+    os.path.join('assets', 'images', 'falcon.png'))
 PLAYER_2_IMAGE = pygame.transform.rotate(pygame.transform.scale(
-    PLAYER_2_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), 90)
+    PLAYER_2_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P2_ROTATE)
 
 
 def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health):
@@ -75,6 +77,8 @@ def p1_handle_movement(keys_pressed, p1):
         p1.y -= VEL
     if keys_pressed[pygame.K_s] and p1.y + VEL + p1.height < HEIGHT:  # DOWN
         p1.y += VEL
+    if keys_pressed[pygame.K_r]:
+        p1.P1_ROTATE += ROTATE_SPEED
 
 
 def p2_handle_movement(keys_pressed, p2):
@@ -115,8 +119,8 @@ def draw_winner(text):
 
 
 def main():
-    p1 = pygame.Rect(100, 200, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
-    p2 = pygame.Rect(700, 200, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+    p1 = pygame.Rect(100, 250, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+    p2 = pygame.Rect(900, 250, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
 
     p1_bullets = []
     p2_bullets = []
@@ -139,27 +143,31 @@ def main():
                     bullet = pygame.Rect(
                         p1.x + p1.width, p1.y + p1.height//2, 15, 5)
                     p1_bullets.append(bullet)
-                    # BULLET_SHOT_SOUND.play()
+                    BULLET_SHOT_SOUND.play()
+                    BULLET_SHOT_SOUND.set_volume(0.6)
                 if event.key == pygame.K_RCTRL and len(p2_bullets) < MAX_BULLETS:
                     bullet = pygame.Rect(
                         p2.x, p2.y + p2.height//2, 15, 5)
                     p2_bullets.append(bullet)
-                    # BULLET_SHOT_SOUND.play()
+                    BULLET_SHOT_SOUND.play()
+                    BULLET_SHOT_SOUND.set_volume(0.6)
 
             if event.type == P1_HIT and p1_health > 0:
                 p1_health -= 1
                 BULLET_HIT_SOUND.play()
+                BULLET_HIT_SOUND.set_volume(5)
 
             if event.type == P2_HIT and p2_health > 0:
                 p2_health -= 1
                 BULLET_HIT_SOUND.play()
+                BULLET_HIT_SOUND.set_volume(5)
 
         winner_text = ""
         if p1_health <= 0:
-            winner_text = "Player 1 Wins !"
+            winner_text = "Player 2 Wins !"
 
         if p2_health <= 0:
-            winner_text = "Player 2 Wins !"
+            winner_text = "Player 1 Wins !"
 
         if winner_text != "":
             draw_winner(winner_text)  # SOMEONE WON
