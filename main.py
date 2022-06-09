@@ -4,7 +4,7 @@ import os
 pygame.font.init()
 pygame.mixer.init()
 
-WIDTH, HEIGHT = 1200, 600
+WIDTH, HEIGHT = 1280, 1024
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Pi-Fighters")
 
@@ -25,7 +25,7 @@ FPS = 60
 VEL = 5
 BULLET_VEL = 7
 MAX_BULLETS = 5
-SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 90, 80
+SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 120, 90
 P1_ROTATE = 0
 P2_ROTATE = 90
 
@@ -119,8 +119,8 @@ def draw_winner(text):
 
 
 def main():
-    p1 = pygame.Rect(100, 250, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
-    p2 = pygame.Rect(900, 250, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+    p1 = pygame.Rect(WIDTH//3.75, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+    p2 = pygame.Rect(WIDTH//1.25, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
 
     p1_bullets = []
     p2_bullets = []

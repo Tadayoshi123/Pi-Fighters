@@ -1,6 +1,7 @@
 import pygame
 import pygame_menu
-from spaceship import Spaceship
+
+from main import main
 
 # Initialize pygame
 pygame.init()
@@ -79,7 +80,7 @@ mainMenuTheme.title_bar_style = pygame_menu.widgets.MENUBAR_STYLE_SIMPLE
 
 mainMenu = pygame_menu.Menu(
     'Pi-Fighters', screenWidth, screenHeight, theme=mainMenuTheme)
-mainMenu.add.button('Play', selectMenu)
+mainMenu.add.button('Play', main)
 mainMenu.add.button('Instructions', instructMenu)
 mainMenu.add.button('Options', optionsMenu)
 mainMenu.add.button('Quit', pygame_menu.events.EXIT)
