@@ -1,6 +1,5 @@
 import pygame, sys
 import os
-import time
 
 pygame.font.init()
 pygame.mixer.init()
@@ -19,10 +18,11 @@ BULLET_SHOT_SOUND = pygame.mixer.Sound('assets/sounds/laser.wav')
 
 TIME_FONT = pygame.font.SysFont('comicsans', 40)
 
-SCORE_FONT = pygame.font.SysFont('comicsans', 40)
+SCORE_FONT = pygame.font.SysFont('comicsans', 20)
 
-HEALTH_FONT = pygame.font.SysFont('comicsans', 40)
+HEALTH_FONT = pygame.font.SysFont('comicsans', 20)
 WINNER_FONT = pygame.font.SysFont('comicsans', 100)
+PSEUDO_PLAYER_FONT = pygame.font.SysFont('comicsans', 20)
 
 
 FPS = 60
@@ -51,9 +51,20 @@ PLAYER_2_IMAGE = pygame.transform.rotate(pygame.transform.scale(
     PLAYER_2_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P2_ROTATE)
 
 
-def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time):
+def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time, pseudo1, pseudo2):
     WIN.blit(BACKGROUND, (0, 0))
     pygame.draw.rect(WIN, (0, 0, 0), BORDER)
+
+    #Affichage des pseudo "Player"
+    pseudo1_text = PSEUDO_PLAYER_FONT.render(
+        pseudo1, 1, (255,255,255)
+    )
+    WIN.blit(pseudo1_text, (10, 10))
+
+    pseudo2_text = PSEUDO_PLAYER_FONT.render(
+        pseudo2, 1, (255,255,255)
+    )
+    WIN.blit(pseudo2_text, (WIDTH - pseudo2_text.get_width() - 10, 10))
 
     #Affichage du temps
     current_time_text = TIME_FONT.render(
@@ -67,6 +78,8 @@ def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, 
     p2_health_text = HEALTH_FONT.render(
         "Health: " + str(p2_health), 1, (255, 255, 255))
 
+    WIN.blit(p1_health_text, (10, 40))
+    WIN.blit(p2_health_text, (WIDTH - p2_health_text.get_width() - 10, 40))
     
     p1_score_text = SCORE_FONT.render(
         "Score: " + str(p1_score), 1, (255, 255, 255)
@@ -75,11 +88,9 @@ def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, 
         "Score: " + str(p2_score), 1, (255, 255, 255)
     )
 
-    WIN.blit(p1_score_text, (10, 50))
-    WIN.blit(p2_score_text, (WIDTH - p2_score_text.get_width() - 10, 50))
+    WIN.blit(p1_score_text, (10, 70))
+    WIN.blit(p2_score_text, (WIDTH - p2_score_text.get_width() - 10, 70))
 
-    WIN.blit(p1_health_text, (10, 10))
-    WIN.blit(p2_health_text, (WIDTH - p2_health_text.get_width() - 10, 10))
 
     WIN.blit(PLAYER_1_IMAGE, (p1.x, p1.y))
     WIN.blit(PLAYER_2_IMAGE, (p2.x, p2.y))
@@ -148,6 +159,9 @@ def main():
     p1 = pygame.Rect(WIDTH//3.75, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
     p2 = pygame.Rect(WIDTH//1.25, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
 
+    pseudo1 = "Player 1"
+    pseudo2 = "Player 2"
+
     p1_bullets = []
     p2_bullets = []
 
@@ -157,6 +171,9 @@ def main():
 #Score des joueurs
     p1_score = 0
     p2_score = 0
+
+    #base de points
+    base_point = 100000
 
     clock = pygame.time.Clock()
 
@@ -199,20 +216,18 @@ def main():
 
         #Écoulement du temps (+1)
         current_time = pygame.time.get_ticks() // 1000
-
+        base_point -= current_time
 
         winner_text = ""
 
         if p1_health <= 0:
             winner_text = "Player 2 Wins !"
-            p1_score
-            p2_score
+            p1_score += base_point
 
 
         if p2_health <= 0:
             winner_text = "Player 1 Wins !"
-            p2_score
-            p1_score
+            p2_score += base_point
 
         if winner_text != "":
             draw_winner(winner_text)  # SOMEONE WON
@@ -224,7 +239,7 @@ def main():
 
         handle_bullets(p1_bullets, p2_bullets, p1, p2)
 
-        draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time)
+        draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time, pseudo1, pseudo2)
 
     main()
 
