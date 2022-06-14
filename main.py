@@ -1,10 +1,11 @@
-import pygame
+import pygame, sys
 import os
+import time
 
 pygame.font.init()
 pygame.mixer.init()
 
-WIDTH, HEIGHT = 1280, 1024
+WIDTH, HEIGHT = 900, 500
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Pi-Fighters")
 
@@ -16,6 +17,9 @@ BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 BULLET_HIT_SOUND = pygame.mixer.Sound('assets/sounds/spaceship_hit.wav')
 BULLET_SHOT_SOUND = pygame.mixer.Sound('assets/sounds/laser.wav')
 
+TIME_FONT = pygame.font.SysFont('comicsans', 40)
+
+SCORE_FONT = pygame.font.SysFont('comicsans', 40)
 
 HEALTH_FONT = pygame.font.SysFont('comicsans', 40)
 WINNER_FONT = pygame.font.SysFont('comicsans', 100)
@@ -47,13 +51,33 @@ PLAYER_2_IMAGE = pygame.transform.rotate(pygame.transform.scale(
     PLAYER_2_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P2_ROTATE)
 
 
-def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health):
+def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time):
     WIN.blit(BACKGROUND, (0, 0))
     pygame.draw.rect(WIN, (0, 0, 0), BORDER)
+
+    #Affichage du temps
+    current_time_text = TIME_FONT.render(
+        "Time: " + str(current_time), 1, (255,255,255)
+    )
+
+    WIN.blit(current_time_text, (350, 10))
+
     p1_health_text = HEALTH_FONT.render(
         "Health: " + str(p1_health), 1, (255, 255, 255))
     p2_health_text = HEALTH_FONT.render(
         "Health: " + str(p2_health), 1, (255, 255, 255))
+
+    
+    p1_score_text = SCORE_FONT.render(
+        "Score: " + str(p1_score), 1, (255, 255, 255)
+    )
+    p2_score_text = SCORE_FONT.render(
+        "Score: " + str(p2_score), 1, (255, 255, 255)
+    )
+
+    WIN.blit(p1_score_text, (10, 50))
+    WIN.blit(p2_score_text, (WIDTH - p2_score_text.get_width() - 10, 50))
+
     WIN.blit(p1_health_text, (10, 10))
     WIN.blit(p2_health_text, (WIDTH - p2_health_text.get_width() - 10, 10))
 
@@ -67,7 +91,9 @@ def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health):
         pygame.draw.rect(WIN, P2_BULLET_COLOR, bullet)
     pygame.display.update()
 
+#conversion du temps au format "minute:seconde"
 
+#gestion de mouvement
 def p1_handle_movement(keys_pressed, p1):
     if keys_pressed[pygame.K_a] and p1.x - VEL > 0:  # LEFT
         p1.x -= VEL
@@ -128,7 +154,14 @@ def main():
     p1_health = 20
     p2_health = 20
 
+#Score des joueurs
+    p1_score = 0
+    p2_score = 0
+
     clock = pygame.time.Clock()
+
+    #variable pour le temps
+    current_time = 0
 
     run = True
     while run:
@@ -154,20 +187,32 @@ def main():
 
             if event.type == P1_HIT and p1_health > 0:
                 p1_health -= 1
+                p2_score += 1
                 BULLET_HIT_SOUND.play()
                 BULLET_HIT_SOUND.set_volume(5)
 
             if event.type == P2_HIT and p2_health > 0:
                 p2_health -= 1
+                p1_score += 1
                 BULLET_HIT_SOUND.play()
                 BULLET_HIT_SOUND.set_volume(5)
 
+        #Écoulement du temps (+1)
+        current_time = pygame.time.get_ticks() // 1000
+
+
         winner_text = ""
+
         if p1_health <= 0:
             winner_text = "Player 2 Wins !"
+            p1_score
+            p2_score
+
 
         if p2_health <= 0:
             winner_text = "Player 1 Wins !"
+            p2_score
+            p1_score
 
         if winner_text != "":
             draw_winner(winner_text)  # SOMEONE WON
@@ -179,7 +224,7 @@ def main():
 
         handle_bullets(p1_bullets, p2_bullets, p1, p2)
 
-        draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health)
+        draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time)
 
     main()
 
