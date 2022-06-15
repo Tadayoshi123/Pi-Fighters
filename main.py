@@ -1,20 +1,10 @@
-import pygame, sys
-import os
+import pygame
 
-pygame.font.init()
+from ship import *
+from projectile import *
+
+pygame.init()
 pygame.mixer.init()
-
-WIDTH, HEIGHT = 900, 500
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Pi-Fighters")
-
-BACKGROUND = pygame.transform.scale(pygame.image.load(
-    os.path.join('assets', 'images', 'space_bg.png')), (WIDTH, HEIGHT))
-
-BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
-
-BULLET_HIT_SOUND = pygame.mixer.Sound('assets/sounds/spaceship_hit.wav')
-BULLET_SHOT_SOUND = pygame.mixer.Sound('assets/sounds/laser.wav')
 
 TIME_FONT = pygame.font.SysFont('comicsans', 40)
 
@@ -24,225 +14,144 @@ HEALTH_FONT = pygame.font.SysFont('comicsans', 20)
 WINNER_FONT = pygame.font.SysFont('comicsans', 100)
 PSEUDO_PLAYER_FONT = pygame.font.SysFont('comicsans', 20)
 
+WINNER_TEXT = ""
+
 
 FPS = 60
-VEL = 5
-BULLET_VEL = 7
-MAX_BULLETS = 5
-SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 120, 90
-P1_ROTATE = 0
-P2_ROTATE = 90
 
-ROTATE_SPEED = 20
+SCREENWIDTH, SCREENHEIGHT = 1000, 800
 
-P1_BULLET_COLOR = (255, 59, 0)
-P2_BULLET_COLOR = (130, 19, 28)
+screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
+pygame.display.set_caption("Pi-Fighters")
 
-P1_HIT = pygame.USEREVENT + 1
-P2_HIT = pygame.USEREVENT + 2
-
-PLAYER_1_IMAGE = pygame.image.load(
-    os.path.join('assets', 'images', 'zero.png'))
-PLAYER_1_IMAGE = pygame.transform.rotate(pygame.transform.scale(
-    PLAYER_1_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P1_ROTATE)
-PLAYER_2_IMAGE = pygame.image.load(
-    os.path.join('assets', 'images', 'falcon.png'))
-PLAYER_2_IMAGE = pygame.transform.rotate(pygame.transform.scale(
-    PLAYER_2_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), P2_ROTATE)
+bgImage = pygame.transform.scale(pygame.image.load("assets/images/backgrounds/space_bg.png"), (SCREENWIDTH, SCREENHEIGHT))
 
 
-def draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time, pseudo1, pseudo2):
-    WIN.blit(BACKGROUND, (0, 0))
-    pygame.draw.rect(WIN, (0, 0, 0), BORDER)
+# drawing
+def draw_background(screen):
+    screen.blit(bgImage, (0, 0))
 
-    #Affichage des pseudo "Player"
-    pseudo1_text = PSEUDO_PLAYER_FONT.render(
-        pseudo1, 1, (255,255,255)
-    )
-    WIN.blit(pseudo1_text, (10, 10))
-
-    pseudo2_text = PSEUDO_PLAYER_FONT.render(
-        pseudo2, 1, (255,255,255)
-    )
-    WIN.blit(pseudo2_text, (WIDTH - pseudo2_text.get_width() - 10, 10))
-
-    #Affichage du temps
-    current_time_text = TIME_FONT.render(
-        "Time: " + str(current_time), 1, (255,255,255)
-    )
-
-    WIN.blit(current_time_text, (350, 10))
-
-    p1_health_text = HEALTH_FONT.render(
-        "Health: " + str(p1_health), 1, (255, 255, 255))
-    p2_health_text = HEALTH_FONT.render(
-        "Health: " + str(p2_health), 1, (255, 255, 255))
-
-    WIN.blit(p1_health_text, (10, 40))
-    WIN.blit(p2_health_text, (WIDTH - p2_health_text.get_width() - 10, 40))
-    
-    p1_score_text = SCORE_FONT.render(
-        "Score: " + str(p1_score), 1, (255, 255, 255)
-    )
-    p2_score_text = SCORE_FONT.render(
-        "Score: " + str(p2_score), 1, (255, 255, 255)
-    )
-
-    WIN.blit(p1_score_text, (10, 70))
-    WIN.blit(p2_score_text, (WIDTH - p2_score_text.get_width() - 10, 70))
-
-
-    WIN.blit(PLAYER_1_IMAGE, (p1.x, p1.y))
-    WIN.blit(PLAYER_2_IMAGE, (p2.x, p2.y))
-
-    for bullet in p1_bullets:
-        pygame.draw.rect(WIN, P1_BULLET_COLOR, bullet)
-
-    for bullet in p2_bullets:
-        pygame.draw.rect(WIN, P2_BULLET_COLOR, bullet)
-    pygame.display.update()
-
-#conversion du temps au format "minute:seconde"
-
-#gestion de mouvement
-def p1_handle_movement(keys_pressed, p1):
-    if keys_pressed[pygame.K_a] and p1.x - VEL > 0:  # LEFT
-        p1.x -= VEL
-    if keys_pressed[pygame.K_d] and p1.x + VEL + p1.width < BORDER.x:  # RIGTH
-        p1.x += VEL
-    if keys_pressed[pygame.K_w] and p1.y - VEL > 0:  # UP
-        p1.y -= VEL
-    if keys_pressed[pygame.K_s] and p1.y + VEL + p1.height < HEIGHT:  # DOWN
-        p1.y += VEL
-    if keys_pressed[pygame.K_r]:
-        p1.P1_ROTATE += ROTATE_SPEED
-
-
-def p2_handle_movement(keys_pressed, p2):
-    if keys_pressed[pygame.K_LEFT] and p2.x - VEL > BORDER.x + BORDER.width:  # LEFT
-        p2.x -= VEL
-    if keys_pressed[pygame.K_RIGHT] and p2.x + VEL + p2.width < WIDTH:  # RIGHT
-        p2.x += VEL
-    if keys_pressed[pygame.K_UP] and p2.y - VEL > 0:  # UP
-        p2.y -= VEL
-    if keys_pressed[pygame.K_DOWN] and p2.y + VEL + p2.height < HEIGHT:  # DOWN
-        p2.y += VEL
-
-
-def handle_bullets(p1_bullets, p2_bullets, p1, p2):
-    for bullet in p1_bullets:
-        bullet.x += BULLET_VEL
-        if p2.colliderect(bullet):
-            pygame.event.post(pygame.event.Event(P2_HIT))
-            p1_bullets.remove(bullet)
-        elif bullet.x > WIDTH:
-            p1_bullets.remove(bullet)
-
-    for bullet in p2_bullets:
-        bullet.x -= BULLET_VEL
-        if p1.colliderect(bullet):
-            pygame.event.post(pygame.event.Event(P1_HIT))
-            p2_bullets.remove(bullet)
-        elif bullet.x < 0:
-            p2_bullets.remove(bullet)
+def draw_health_bar(health, x, y):
+    ratio = health / 100
+    pygame.draw.rect(screen, pygame.Color('red'), (x, y, 400, 15))
+    if health >= 10:
+        pygame.draw.rect(screen, pygame.Color('yellow'), (x, y, 400 * ratio, 15))   
 
 
 def draw_winner(text):
     draw_text = WINNER_FONT.render(text, 1, (255, 255, 255))
-    WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width() //
-             2, HEIGHT//2 - draw_text.get_height()//2))
+    screen.blit(draw_text, (SCREENWIDTH//2 - draw_text.get_width() //
+             2, SCREENHEIGHT//2 - draw_text.get_height()//2))
     pygame.display.update()
     pygame.time.delay(5000)
+    pygame.quit()
+
+def draw_projectile(Player1_bullet, Player2_bullet):
+    for item in Player1_bullet:
+        pygame.draw.rect(screen, pygame.Color('orange'), item)
+    for item in Player2_bullet:
+        pygame.draw.rect(screen, pygame.Color('red'), item)
+
+
+# movement
+def handle_movement_Player(Ship1, Ship2):
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[pygame.K_a] or keys_pressed[pygame.K_q] or joystick1.get_axis(0) < -0.1:
+        Ship1.rotate(left=True)
+
+    if keys_pressed[pygame.K_d] or joystick1.get_axis(0) > 0.1:
+        Ship1.rotate(right=True)
+
+    if keys_pressed[pygame.K_j] or joystick2.get_axis(0) < -0.1:
+        Ship2.rotate(left=True)
+
+    if keys_pressed[pygame.K_l] or joystick2.get_axis(0) > 0.1:
+        Ship2.rotate(right=True)
+
+
+
+def handle_movement_projectile(Player1_bullet, Player2_bullet, Ship1, Ship2):
+    for item in Player1_bullet:
+        item.move()
+        if Ship2.rect.colliderect(item):
+            Player1_bullet.remove(item)
+            Ship2.health -= item.power
+        elif item.rect.x > SCREENWIDTH or item.rect.x < 0 or item.rect.y > SCREENHEIGHT or item.rect.y < 0 :
+            Player1_bullet.remove(item)
+    for item in Player2_bullet:
+        item.move()
+        if Ship1.rect.colliderect(item):
+            Player2_bullet.remove(item)
+            Ship1.health -= item.power
+        elif item.rect.x > SCREENWIDTH or item.rect.x < 0 or item.rect.y > SCREENHEIGHT or item.rect.y < 0:
+            Player2_bullet.remove(item)
 
 
 def main():
-    p1 = pygame.Rect(WIDTH//3.75, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
-    p2 = pygame.Rect(WIDTH//1.25, HEIGHT//2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
-
-    pseudo1 = "Player 1"
-    pseudo2 = "Player 2"
-
-    p1_bullets = []
-    p2_bullets = []
-
-    p1_health = 20
-    p2_health = 20
-
-#Score des joueurs
-    p1_score = 0
-    p2_score = 0
-
-    #base de points
-    base_point = 100000
-
     clock = pygame.time.Clock()
+    Ship1 = Ship("Yanis",1, 100, 350)
+    Ship2 = Ship("Marc",2, 700, 350)
 
-    #variable pour le temps
-    current_time = 0
+    #Empty lists that will stock the bullets
+    Player1_bullet = []
+    Player2_bullet = []
 
     run = True
+
     while run:
+        # set game speed
         clock.tick(FPS)
+        # draw background
+
+        # event handler
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+                # exit pygame
                 pygame.quit()
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LCTRL and len(p1_bullets) < MAX_BULLETS:
-                    bullet = pygame.Rect(
-                        p1.x + p1.width, p1.y + p1.height//2, 15, 5)
-                    p1_bullets.append(bullet)
-                    BULLET_SHOT_SOUND.play()
-                    BULLET_SHOT_SOUND.set_volume(0.6)
-                if event.key == pygame.K_RCTRL and len(p2_bullets) < MAX_BULLETS:
-                    bullet = pygame.Rect(
-                        p2.x, p2.y + p2.height//2, 15, 5)
-                    p2_bullets.append(bullet)
-                    BULLET_SHOT_SOUND.play()
-                    BULLET_SHOT_SOUND.set_volume(0.6)
+                if event.key == pygame.K_r:
+                    Player1_bullet.append(Ship1.shoot_bullet())
+                if event.key == pygame.K_o:
+                    Player2_bullet.append(Ship2.shoot_bullet())
+            if event.type == pygame.JOYBUTTONDOWN:
+                if joystick1.get_button(5):
+                    Player1_bullet.append(Ship1.shoot_bullet())
+                if joystick2.get_button(5):
+                    Player2_bullet.append(Ship2.shoot_bullet())
 
-            if event.type == P1_HIT and p1_health > 0:
-                p1_health -= 1
-                p2_score += 1
-                BULLET_HIT_SOUND.play()
-                BULLET_HIT_SOUND.set_volume(5)
+        draw_background(screen)
 
-            if event.type == P2_HIT and p2_health > 0:
-                p2_health -= 1
-                p1_score += 1
-                BULLET_HIT_SOUND.play()
-                BULLET_HIT_SOUND.set_volume(5)
+        # draw healthbars
+        draw_health_bar(Ship1.health, 20, 20)
+        draw_health_bar(Ship2.health, 580, 20)
 
-        #Écoulement du temps (+1)
-        current_time = pygame.time.get_ticks() // 1000
-        base_point -= current_time
+        # draw ships
+        Ship1.draw_ship(screen)
+        Ship2.draw_ship(screen)
 
-        winner_text = ""
+        # ensure the movement and the collision detection of the bullets
+        handle_movement_projectile(
+            Player1_bullet, Player2_bullet, Ship1, Ship2)
 
-        if p1_health <= 0:
-            winner_text = "Player 2 Wins !"
-            p1_score += base_point
+        Ship.ship_movement(Ship1)
+        Ship.ship_movement(Ship2)
+        handle_movement_Player(Ship1, Ship2)
 
+        draw_projectile(Player1_bullet, Player2_bullet)
 
-        if p2_health <= 0:
-            winner_text = "Player 1 Wins !"
-            p2_score += base_point
+        if Ship1.health <= 0:
+            WINNER_TEXT = Ship2.name + " wins !"
+            draw_winner(WINNER_TEXT)
+        
+        if Ship2.health <= 0:
+            WINNER_TEXT = Ship1.name + " wins !"
+            draw_winner(WINNER_TEXT)
 
-        if winner_text != "":
-            draw_winner(winner_text)  # SOMEONE WON
-            break
-
-        keys_pressed = pygame.key.get_pressed()
-        p1_handle_movement(keys_pressed, p1)
-        p2_handle_movement(keys_pressed, p2)
-
-        handle_bullets(p1_bullets, p2_bullets, p1, p2)
-
-        draw_window(p1, p2, p1_bullets, p2_bullets, p1_health, p2_health, p1_score, p2_score, current_time, pseudo1, pseudo2)
-
-    main()
+        # update display
+        pygame.display.update()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
