@@ -36,8 +36,8 @@ class Ship():
         self.x = x
         self.y = y
         self.rect = pygame.Rect((x, y, WIDTH_VAISSEAU, HEIGHT_VAISSEAU))
-        self.health = 100
-        self.movSpeed = 8
+        self.health = 50
+        self.movSpeed = 7
         self.playerID = playerID
         self.name = name
         if self.playerID == 1:
